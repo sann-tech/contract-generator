@@ -798,6 +798,30 @@ ${contractBody}
     document.head.removeChild(pdfStyle);
   }
 }
+// ── PDF Upload handlers ─────────────────────────
+const _uploadedPdfs={};
+function handlePdfUpload(type, input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _uploadedPdfs[type]={base64:e.target.result.split(',')[1], filename:file.name};
+    const label=input.closest('.pdf-attach-label');
+    label.classList.add('has-file');
+    g(`pdf-attach-text-${type}`).textContent=`📎 ${file.name}`;
+    g(`pdf-clear-${type}`).style.display='';
+  };
+  reader.readAsDataURL(file);
+}
+function clearPdfUpload(type){
+  delete _uploadedPdfs[type];
+  g(`pdf-upload-${type}`).value='';
+  const label=g(`pdf-upload-${type}`).closest('.pdf-attach-label');
+  label.classList.remove('has-file');
+  const defaultText=type==='signed'?'Attach signed PDF (optional)':'Attach PDF (optional)';
+  g(`pdf-attach-text-${type}`).textContent=defaultText;
+  g(`pdf-clear-${type}`).style.display='none';
+}
 // ── Send email via Flask API ───────────────────────
 async function sendEmailNow(type){
   const d=collect();
@@ -808,21 +832,14 @@ async function sendEmailNow(type){
 
   btn.disabled=true;
 
-  // Step 1 — Generate PDF
-  btn.innerHTML=`<div class="spinner"></div> Generating PDF…`;
   let pdfBase64=null, pdfFilename='contract.pdf';
-  try{
-    const r=await generateContractPdfBase64();
-    pdfBase64=r.base64; pdfFilename=r.filename;
-    toast('PDF generated ✓ — sending email…','ok',2000);
-  }catch(e){
-    toast('PDF generation failed: '+e.message,'err',6000);
-    btn.disabled=false;
-    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Now`;
-    return;
+
+  // Manual PDF upload only
+  if(_uploadedPdfs[type]){
+    pdfBase64=_uploadedPdfs[type].base64;
+    pdfFilename=_uploadedPdfs[type].filename;
   }
 
-  // Step 2 — Send email
   btn.innerHTML=`<div class="spinner"></div> Sending…`;
   const bodyText=g(`email-${type}`).textContent;
   const subj=window._emailSubjects?.[type]||'Web Development Contract';
