@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DevZan — Contract Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if user is defined and user %}
+<script type="application/json" id="__devzan-user__">{{ user | tojson }}</script>
+{% endif %}
+<div class="app">
+
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div>
+      <div class="sb-logo-text">DevZan</div>
+      <div class="sb-logo-sub">Contract Generator</div>
+    </div>
+  </div>
+
+  <!-- Auth panel -->
+  <div id="sb-user-panel" class="sb-user" style="display:none">
+    <div class="sb-user-info">
+      <div class="sb-avatar" id="sb-avatar-wrap">
+        <span id="sb-avatar-initial">?</span>
+      </div>
+      <div class="sb-user-text">
+        <div class="sb-user-name" id="sb-user-name">—</div>
+        <div class="sb-user-email" id="sb-user-email">—</div>
+      </div>
+    </div>
+    <div class="sb-user-actions">
+      <button class="sb-user-btn logout" onclick="location.href='/auth/logout'">Sign out</button>
+    </div>
+  </div>
+
+  <div id="sb-guest-panel" class="sb-guest" style="display:none">
+    <p><strong>You're in guest mode.</strong><br>Contracts saved in browser only.</p>
+    <a href="/auth/google" class="btn-google">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.7 5.4 2.9 13.3l7.9 6.1C12.7 13 18 9.5 24 9.5z"/><path fill="#4A90D9" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.8-2.1 5.1-4.5 6.7l7 5.4c4.1-3.8 6.5-9.4 6.5-16.1z"/><path fill="#34A853" d="M10.8 28.6A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A24 24 0 000 24c0 3.9.9 7.5 2.6 10.8l8.2-6.2z"/><path fill="#FBBC05" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6 0-11.2-4-13-9.5l-8.2 6.2C6.5 42.6 14.7 48 24 48z"/></svg>
+      Continue with Google
+    </a>
+  </div>
+
+  <div class="sb-section-label">My Contracts</div>
+  <div class="sb-contracts-wrap" id="sb-contracts">
+    <p style="font-size:11px;color:rgba(255,255,255,.28);padding:4px 4px 8px">No saved contracts yet</p>
+  </div>
+  <button class="btn-new" onclick="newContract()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>
+    New Contract
+  </button>
+
+  <div class="sb-section-label">Sections</div>
+  <div class="nav-item active" onclick="goTo('sec-dev')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <div class="nav-num">1</div> Developer Info
+  </div>
+  <div class="nav-item" onclick="goTo('sec-client')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg>
+    <div class="nav-num">2</div> Client Info
+  </div>
+  <div class="nav-item" onclick="goTo('sec-scope')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <div class="nav-num">3</div> Scope of Work
+  </div>
+  <div class="nav-item" onclick="goTo('sec-pricing')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1m-3.5-5h7m-5-2.5c0-1 .9-1.5 2-1.5s2 .7 2 1.5-.9 1.5-2 1.5-2 .5-2 1.5.9 1.5 2 1.5 2-.5 2-1.5"/></svg>
+    <div class="nav-num">4</div> Pricing & Payment
+  </div>
+  <div class="nav-item" onclick="goTo('sec-extras')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    <div class="nav-num">5</div> Extras & Exclusions
+  </div>
+  <div class="nav-item" onclick="goTo('sec-support')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 010 1.4L7.4 15a2 2 0 01-.7.5l-3 1 1-3a2 2 0 01.5-.7l7.3-7.3a1 1 0 011.2-.2zM13 8l3 3"/></svg>
+    <div class="nav-num">6</div> Support & Tech
+  </div>
+  <div class="nav-item" onclick="goTo('sec-tnc')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <div class="nav-num">7</div> Terms & Conditions
+  </div>
+  <div class="nav-item" onclick="goTo('sec-smtp')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    <div class="nav-num">8</div> Email Settings
+  </div>
+
+  <div class="sb-summary">
+    <div class="sum-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Payment Summary
+    </div>
+    <div class="sum-row"><span>Development</span><span class="amt" id="s-dev">₱0.00</span></div>
+    <div class="sum-row"><span>Domain</span><span class="amt" id="s-domain">₱0.00</span></div>
+    <div class="sum-row"><span>Hosting</span><span class="amt" id="s-host">₱0.00</span></div>
+    <div class="sum-row"><span>Extras</span><span class="amt" id="s-extras">₱0.00</span></div>
+    <hr class="sum-divider"/>
+    <div class="sum-row total"><span>Total</span><span class="amt" id="s-total">₱0.00</span></div>
+    <div class="sum-half"><span>Down Payment</span><span id="s-down">₱0.00</span></div>
+    <div class="sum-half"><span>Final Payment</span><span id="s-final">₱0.00</span></div>
+  </div>
+
+  <!-- Permanent logout — always visible when logged in -->
+  <div id="sb-logout-wrap" style="display:none; padding: 0 10px 10px;">
+    <a href="/auth/logout" style="
+      display:flex; align-items:center; gap:8px;
+      padding:9px 12px; border-radius:8px;
+      background:rgba(239,68,68,.15); border:1px solid rgba(239,68,68,.3);
+      color:#f87171; font-size:12.5px; font-weight:600;
+      text-decoration:none; transition:background .15s;
+    " onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Sign out
+    </a>
+  </div>
+
+  <div class="sb-actions">
+    <button class="sb-btn secondary" onclick="saveContract()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save Contract
+    </button>
+    <button class="sb-btn primary" onclick="generateContract()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Generate Contract
+    </button>
+  </div>
+</aside>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<main class="main">
+  <div class="page-header">
+    <div class="ph-left">
+      <h1>Contract Generator</h1>
+      <p>Build professional web development contracts in minutes.</p>
+      <div class="contract-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M9 5H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <span id="contract-num-display">—</span>
+      </div>
+    </div>
+    <div class="ph-right">
+      <button class="action-btn email-btn" onclick="openEmailModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Send Email
+      </button>
+    </div>
+  </div>
+
+  <!-- Guest mode banner (hidden when logged in) -->
+  <div id="guest-banner" class="guest-banner" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="guest-banner-text">
+      <strong>Guest Mode — Data saved in this browser only</strong>
+      <span>Sign in with Google to save contracts to the cloud and access them anywhere.</span>
+    </div>
+    <a href="/auth/google/authorized" class="guest-banner-btn">Sign in free</a>
+  </div>
+
+  <!-- Revision History -->
+  <div class="rev-bar">
+    <div class="rev-bar-top">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        Revision History
+      </h3>
+      <button class="add-btn" style="padding:5px 11px;font-size:11.5px" onclick="promptRevision()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>
+        Add Note
+      </button>
+    </div>
+    <div class="rev-list" id="revision-list">
+      <p class="rev-empty">No revisions yet — changes are logged automatically on save.</p>
+    </div>
+  </div>
+
+  <!-- 1. Developer Info -->
+  <div class="section" id="sec-dev">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="sec-title"><h2>Developer Information</h2><p>Your profile, logo & payment details</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="logo-area" id="logo-area">
+        <img id="logo-preview" class="logo-preview" src="" alt="Logo"/>
+        <div class="la-icon" id="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <p id="upload-text">Click to upload your logo (PNG, JPG, SVG)</p>
+        <input type="file" id="logo-file" accept="image/*" onchange="handleLogo(event)"/>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Full Name</label><input type="text" id="dev-name" placeholder="Daniel Zan Baltazar" oninput="autoSave()"/></div>
+        <div class="field"><label>Email Address</label><input type="email" id="dev-email" placeholder="dev@email.com" oninput="autoSave()"/></div>
+        <div class="field"><label>GCash Number</label><input type="text" id="dev-gcash" placeholder="09XXXXXXXXX" oninput="autoSave()"/></div>
+        <div class="field"><label>Business / Brand Name</label><input type="text" id="dev-business" placeholder="DevZan Solutions" oninput="autoSave()"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Client Info -->
+  <div class="section" id="sec-client">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg></div>
+      <div class="sec-title"><h2>Client Information</h2><p>Client or company contact details</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="grid-2">
+        <div class="field"><label>Company Name</label><input type="text" id="cli-company" placeholder="Client Co." oninput="autoSave()"/></div>
+        <div class="field"><label>Contact Person</label><input type="text" id="cli-contact" placeholder="Mercedes Santos" oninput="autoSave()"/></div>
+        <div class="field"><label>Phone Number</label><input type="text" id="cli-phone" placeholder="09XXXXXXXXX" oninput="autoSave()"/></div>
+        <div class="field"><label>Email Address</label><input type="email" id="cli-email" placeholder="client@email.com" oninput="autoSave()"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Scope -->
+  <div class="section" id="sec-scope">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>
+      <div class="sec-title"><h2>Scope of Work</h2><p>Project description and deliverables</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="field"><label>Project Description</label><textarea id="proj-desc" placeholder="Describe the project goals, deliverables, and any special requirements..." oninput="autoSave()"></textarea></div>
+      <div class="field">
+        <label>Deliverable Pages / Sections</label>
+        <div class="item-list" id="pages-list"></div>
+        <button class="add-btn" onclick="addPage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Page
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Pricing -->
+  <div class="section" id="sec-pricing">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1m-3-5.5h7"/></svg></div>
+      <div class="sec-title"><h2>Pricing & Payment</h2><p>Contract costs and payment structure</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="grid-3">
+        <div class="field"><label>Development Cost (PHP)</label><div class="pfx-wrap"><span class="pfx">₱</span><input type="number" id="cost-dev" placeholder="50000" oninput="updateSummary();autoSave()"/></div></div>
+        <div class="field"><label>Domain Cost (PHP)</label><div class="pfx-wrap"><span class="pfx">₱</span><input type="number" id="cost-domain" placeholder="599" oninput="updateSummary();autoSave()"/></div></div>
+        <div class="field"><label>Hosting Cost (PHP)</label><div class="pfx-wrap"><span class="pfx">₱</span><input type="number" id="cost-hosting" placeholder="1000" oninput="updateSummary();autoSave()"/></div></div>
+        <div class="field"><label>Project Timeline</label><input type="text" id="proj-timeline" placeholder="e.g. 6–7 days" oninput="autoSave()"/></div>
+        <div class="field"><label>Down Payment %</label>
+          <select id="down-pct" onchange="updateSummary();autoSave()">
+            <option value="50">50% Down Payment</option>
+            <option value="30">30% Down Payment</option>
+            <option value="100">100% Full Payment</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Extras & Exclusions -->
+  <div class="section" id="sec-extras">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
+      <div class="sec-title"><h2>Extras & Exclusions</h2><p>Add-ons and items not covered</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="field">
+        <label>Extras (with price)</label>
+        <div class="item-list" id="extras-list"></div>
+        <button class="add-btn" onclick="addExtra()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Extra Item
+        </button>
+      </div>
+      <div class="field" style="margin-top:8px">
+        <label>Exclusions</label>
+        <div class="item-list" id="excl-list"></div>
+        <button class="add-btn" onclick="addExclusion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Exclusion
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Support & Tech -->
+  <div class="section" id="sec-support">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 010 1.4L7.4 15a2 2 0 01-.7.5l-3 1 1-3a2 2 0 01.5-.7l7.3-7.3a1 1 0 011.2-.2zM13 8l3 3"/></svg></div>
+      <div class="sec-title"><h2>Support & Technology</h2><p>Post-launch terms and tech stack</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="grid-3">
+        <div class="field"><label>Free Support Days</label><input type="number" id="supp-days" placeholder="30" oninput="autoSave()"/></div>
+        <div class="field"><label>Hourly Rate After Support</label><div class="pfx-wrap"><span class="pfx">₱</span><input type="number" id="supp-rate" placeholder="100" oninput="autoSave()"/></div></div>
+      </div>
+      <div class="field">
+        <label>Technology Stack</label>
+        <div class="tech-tags" id="tech-tags"></div>
+        <div class="tech-input-row">
+          <input type="text" id="tech-input" placeholder="e.g. React, Node.js, MySQL" onkeydown="if(event.key==='Enter')addTech()"/>
+          <button class="add-btn" onclick="addTech()">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Terms & Conditions -->
+  <div class="section" id="sec-tnc">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <div class="sec-title"><h2>Terms & Conditions</h2><p>Editable legal clauses for the contract</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <textarea class="tnc-area" id="tnc-text" oninput="autoSave()"></textarea>
+    </div>
+  </div>
+
+  <!-- 8. Email / SMTP Settings -->
+  <div class="section" id="sec-smtp">
+    <div class="sec-header" onclick="toggleSec(this)">
+      <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+      <div class="sec-title"><h2>Email Settings</h2><p>SMTP config for automatic contract delivery</p></div>
+      <div class="sec-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="sec-body">
+      <div class="smtp-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>For Gmail, use an <strong>App Password</strong> (not your regular password). Go to Google Account → Security → 2-Step Verification → App Passwords.</span>
+      </div>
+      <div class="smtp-grid">
+        <div class="field"><label>Your Email (Sender)</label><input type="email" id="smtp-user" placeholder="yourname@gmail.com" oninput="autoSave()"/></div>
+        <div class="field"><label>App Password</label><input type="password" id="smtp-pass" placeholder="••••••••••••"/></div>
+        <div class="field"><label>SMTP Host</label><input type="text" id="smtp-host" value="smtp.gmail.com"/></div>
+        <div class="field"><label>SMTP Port</label><input type="number" id="smtp-port" value="587"/></div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- ════════════════ CONTRACT PREVIEW MODAL ════════════════ -->
+<div id="preview-overlay">
+  <div class="preview-bar">
+    <button class="action-btn" onclick="closePreview()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      Close
+    </button>
+    <button class="action-btn email-btn" onclick="openEmailModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Send to Client
+    </button>
+    <button class="action-btn" onclick="window.print()" style="background:var(--surface);color:var(--ink)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+  <div class="preview-paper">
+    <div class="ct-paper" id="contract-paper"></div>
+  </div>
+</div>
+
+<!-- ════════════════ EMAIL MODAL ════════════════ -->
+<div class="overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email to Client
+      </h2>
+      <button class="modal-close" onclick="closeEmailModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-initial')">Initial Proposal</button>
+        <button class="tab-btn" onclick="switchTab('tab-followup')">Follow-up</button>
+        <button class="tab-btn" onclick="switchTab('tab-signed')">After Signing</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-initial">
+        <div class="email-preview" id="email-initial"></div>
+        <div class="email-actions">
+          <button class="copy-btn" onclick="copyEmail('email-initial',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+          <button class="send-btn" id="send-btn-initial" onclick="sendEmailNow('initial')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Now
+          </button>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-followup">
+        <div class="email-preview" id="email-followup"></div>
+        <div class="email-actions">
+          <button class="copy-btn" onclick="copyEmail('email-followup',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+          <button class="send-btn" id="send-btn-followup" onclick="sendEmailNow('followup')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Now
+          </button>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-signed">
+        <div class="email-preview" id="email-signed"></div>
+        <div class="email-actions">
+          <button class="copy-btn" onclick="copyEmail('email-signed',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+          <button class="send-btn" id="send-btn-signed" onclick="sendEmailNow('signed')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="toast-icon"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
