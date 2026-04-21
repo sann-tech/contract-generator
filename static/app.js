@@ -402,10 +402,14 @@ function buildContractHTML(d){
   extraItems.forEach(e=>{rows+=`<tr><td>${esc(e.n)}</td><td style="text-align:center;color:var(--ink4)">—</td><td>${php(e.p)}</td></tr>`;});
   rows+=`<tr class="ct-total-row"><td colspan="2"><strong>TOTAL CONTRACT PRICE</strong></td><td>${php(total)}</td></tr>`;
 
+  const tncClauses=d.tnc
+    ? d.tnc.split(/\n\n+/).map(c=>c.trim()).filter(Boolean)
+        .map(c=>`<div class="ct-tnc-clause">${esc(c)}</div>`).join('')
+    : '';
   const tncSection=d.tnc?`
-    <div class="ct-section">
+    <div class="ct-section ct-section-tnc">
       <div class="ct-sec-title"><div class="ct-num-label">${excl.length?7:6}</div>Additional Terms & Conditions</div>
-      <div class="ct-tnc">${esc(d.tnc)}</div>
+      <div class="ct-tnc">${tncClauses}</div>
     </div>`:'';
 
   const acceptNum=excl.length?(d.tnc?8:7):(d.tnc?7:6);
@@ -725,7 +729,10 @@ body{font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.7;backgroun
 .ct-list.supp-list li svg{color:#065f46}
 .ct-list.two-col{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .ct-list.two-col li{margin-bottom:0}
-.ct-tnc{font-size:11.5px;line-height:1.75;color:#334155;white-space:pre-wrap;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:6px;padding:12px 14px}
+.ct-tnc{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:6px;padding:10px 14px}
+.ct-tnc-clause{font-size:11.5px;line-height:1.75;color:#334155;white-space:pre-wrap;page-break-inside:avoid;break-inside:avoid;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed #e2e8f0}
+.ct-tnc-clause:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.ct-section-tnc{page-break-inside:auto}
 .ct-sig-intro{font-size:12px;color:#334155;line-height:1.65;margin-bottom:20px}
 .ct-sig-area{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:6px}
 .ct-sig-box{display:flex;flex-direction:column}
