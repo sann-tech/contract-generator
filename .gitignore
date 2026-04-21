@@ -1,4 +1,32 @@
-__pycache__/
-instance/
-*.pyc
+# Environment variables — HUWAG i-push!
 .env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Database files
+instance/
+*.db
+*.sqlite3
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+*.egg-info/

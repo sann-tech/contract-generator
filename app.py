@@ -1,6 +1,6 @@
 """
 DevZan Contract Generator — Multi-User Flask Backend
-Google OAuth + SQLite + Guest mode support
+Google OAuth + SQLite/PostgreSQL + Guest mode support
 """
 
 import os, json, base64, smtplib, uuid
@@ -22,19 +22,32 @@ from email import encoders
 
 # ── App config ────────────────────────────────────────────────────
 app = Flask(__name__, template_folder="templates")
-app.secret_key = os.environ.get("SECRET_KEY", "devzan-dev-secret-2026")
 
-# Mahalaga para sa local development para hindi mag-error ang session cookies
+# Secret key — DAPAT may SECRET_KEY sa environment variables
+app.secret_key = os.environ.get("SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is not set!")
+
+IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
+
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["SESSION_COOKIE_SECURE"]   = False
+app.config["SESSION_COOKIE_SECURE"]   = IS_PRODUCTION  # True sa production (HTTPS)
 app.config["PERMANENT_SESSION_LIFETIME"] = 3600
 
-# Pinapayagan ang HTTP (hindi HTTPS) para sa OAuth sa local machine
-os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# Pinapayagan ang HTTP para sa OAuth sa local development ONLY
+if not IS_PRODUCTION:
+    os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 # ── Database ──────────────────────────────────────────────────────
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///devzan.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///devzan.db")
+
+# Fix para sa Render/Railway — ginagamit nila "postgres://" pero SQLAlchemy
+# ay nangangailangan ng "postgresql://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -43,7 +56,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = "/"
 
 # ── Google OAuth Blueprint ────────────────────────────────────────
-# Inalis ang MemoryStorage at manual patches para ma-fix ang MismatchingStateError
 google_bp = make_google_blueprint(
     client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
     client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
@@ -136,7 +148,6 @@ def logout():
     session.pop("google_oauth_token", None)
     session.clear()
     response = redirect(url_for("index"))
-    # Delete remember_me cookie set by login_user(remember=True)
     response.delete_cookie("remember_token")
     response.delete_cookie("session")
     return response
@@ -250,7 +261,7 @@ def import_guest_contracts():
     db.session.commit()
     return jsonify({"ok": True, "imported": imported})
 
-# ── PDF Generation ────────────────────────────────
+# ── PDF Generation ────────────────────────────────────────────────
 @app.route("/api/generate-pdf", methods=["POST"])
 def generate_pdf():
     html_content = (request.json or {}).get("html", "")
@@ -270,10 +281,8 @@ def generate_pdf():
         pdf_base64 = base64.b64encode(pdf_bytes).decode()
         return jsonify({"ok": True, "pdf_base64": pdf_base64, "filename": filename})
     except ImportError:
-        print("  [PDF] ERROR: xhtml2pdf not installed")
         return jsonify({"ok": False, "error": "xhtml2pdf not installed. Run: pip install xhtml2pdf"}), 500
     except Exception as e:
-        print(f"  [PDF] ERROR: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 # ── Email ─────────────────────────────────────────────────────────
@@ -319,4 +328,4 @@ with app.app_context():
 if __name__ == "__main__":
     print("\n  ⚡ DevZan Contract Generator (Multi-User)")
     print("  Running at: http://127.0.0.1:5000\n")
-    app.run(debug=True, port=5000)
+    app.run(debug=not IS_PRODUCTION, port=5000)
