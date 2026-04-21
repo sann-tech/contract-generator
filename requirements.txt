@@ -4,5 +4,6 @@ flask-login
 flask-dance
 sqlalchemy
 gunicorn
-xhtml2pdf
+xhtml2pdf==0.2.16
+python-bidi==0.4.2
 python-dotenv
