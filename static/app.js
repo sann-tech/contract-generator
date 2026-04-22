@@ -331,9 +331,23 @@ async function loadContract(id){
   toast('Loaded: '+c.name);
 }
 
+let _deleteTargetId=null;
 async function deleteContract(id,e){
   e.stopPropagation();
-  if(!confirm('Delete this contract?')) return;
+  _deleteTargetId=id;
+  const c=contracts.find(x=>x.id===id);
+  g('delete-contract-name').textContent=c?.name||'this contract';
+  g('delete-modal').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeDeleteModal(){
+  g('delete-modal').classList.remove('show');
+  document.body.style.overflow='';
+  _deleteTargetId=null;
+}
+async function confirmDelete(){
+  const id=_deleteTargetId; if(!id) return;
+  closeDeleteModal();
   await apiDelete(id);
   contracts=contracts.filter(x=>x.id!==id);
   persistLocal();
@@ -356,7 +370,19 @@ function renderRevisions(revs){
   list.innerHTML=revs.slice(0,12).map(r=>`<div class="rev-item"><div class="rev-dot ${r.type||'info'}"></div><span>${esc(r.note)}</span><span class="rev-time">${r.time}</span></div>`).join('');
 }
 function promptRevision(){
-  const note=prompt('Add revision note:'); if(!note) return;
+  g('note-input').value='';
+  g('note-modal').classList.add('show');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>g('note-input').focus(),100);
+}
+function closeNoteModal(){
+  g('note-modal').classList.remove('show');
+  document.body.style.overflow='';
+}
+function submitNote(){
+  const note=g('note-input').value.trim();
+  if(!note) return;
+  closeNoteModal();
   addRevisionUI(note,'warn');
   if(currentId) apiRevision(currentId,note);
 }
