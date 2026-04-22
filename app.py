@@ -325,6 +325,14 @@ def send_email():
 with app.app_context():
     db.create_all()
 
+@app.route('/terms')
+def terms():
+    return render_template('tos.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
 if __name__ == "__main__":
     print("\n  ⚡ DevZan Contract Generator (Multi-User)")
     print("  Running at: http://127.0.0.1:5000\n")
