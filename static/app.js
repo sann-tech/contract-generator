@@ -153,6 +153,7 @@ function populate(d){
   sv('proj-desc',d.projDesc);sv('proj-timeline',d.projTimeline);
   sv('cost-dev',d.costDev);sv('cost-domain',d.costDomain);sv('cost-hosting',d.costHosting);
   sv('down-pct',d.downPct||'50');sv('supp-days',d.suppDays);sv('supp-rate',d.suppRate);sv('tnc-text',d.tnc);
+  setTimeout(autoResizeTnc, 0);
   logoDataUrl=d.logo||'';
   if(logoDataUrl){g('logo-preview').src=logoDataUrl;g('logo-preview').style.display='block';g('upload-icon').style.display='none';g('upload-text').textContent='Logo uploaded ✓ — click to change';}
   else{g('logo-preview').style.display='none';g('upload-icon').style.display='';g('upload-text').textContent='Click to upload your logo (PNG, JPG, SVG)';}
@@ -893,6 +894,13 @@ function copyEmail(id,btn){
     btn.classList.add('copied');
     setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copied');},2000);
   });
+}
+
+// ── Auto-resize TnC textarea ──────────────────────
+function autoResizeTnc(){
+  const ta=g('tnc-text'); if(!ta) return;
+  ta.style.height='auto';
+  ta.style.height=ta.scrollHeight+'px';
 }
 
 // ── Defaults ──────────────────────────────────────
